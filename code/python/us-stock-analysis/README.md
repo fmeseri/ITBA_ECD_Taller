@@ -55,7 +55,7 @@ charm .
 
 # ETL: US stocks analysis (STREAMING)
 
-En el siguiente diagrama podemos ver los distintos componentes con los que vamos a interactuar en la siguiente sección.  
+En el siguiente diagrama podemos ver los distintos componentes con los que vamos a interactuar en la siguiente sección.
 
 ![streaming](../../../images/streaming.png)
 
@@ -72,7 +72,7 @@ docker exec -it worker1 \
 ```
 
 ### Chequear el contenido de Kafka
-Vamos a contrastar que los datos generados por el faker estén llegando efectivamente a Kafka.  
+Vamos a contrastar que los datos generados por el faker estén llegando efectivamente a Kafka.
 
 ```bash
 docker exec -it kafka \
@@ -82,24 +82,24 @@ docker exec -it kafka \
 # apretar CTRL+C para salir
 ```
 
-A continuación, para repasar  los conceptos de `logs`, donde cada evento tiene asociado un número único secuencial, consumiremos nuevamente el tópico de stocks, pero brindando información adicional a cada evento.  
+A continuación, para repasar  los conceptos de `logs`, donde cada evento tiene asociado un número único secuencial, consumiremos nuevamente el tópico de stocks, pero brindando información adicional a cada evento.
 Para esto haremos uso de la aplicación [kafkacat](https://docs.confluent.io/platform/current/app-development/kafkacat-usage.html).
 
 ```bash
 # Parametros:
-# - vamos a conectarnos al broker (-b) kafka:9092 
-# - vamos a consumir (-C) el topico (-t) stocks 
+# - vamos a conectarnos al broker (-b) kafka:9092
+# - vamos a consumir (-C) el topico (-t) stocks
 # - vamos a printar los mensajes con un determinado formato (-f)
 
 docker run --rm --network=wksp_default edenhill/kafkacat:1.6.0 -q \
     -b kafka:9092 \
     -C -t stocks -p0 \
-    -f 'Partition: %p | Offset: %o | Timestamp: %T | Value: %s\n' 
+    -f 'Partition: %p | Offset: %o | Timestamp: %T | Value: %s\n'
 
 # apretar CTRL+C para salir
 ```
 
-Como se puede ver, cada evento tiene asociado un número secuencial único (offset) el cual se genera cuando se inserta el evento en el tópico, de ahí que el `Timestamp` (processing time) va aumentando en conjunto.  
+Como se puede ver, cada evento tiene asociado un número secuencial único (offset) el cual se genera cuando se inserta el evento en el tópico, de ahí que el `Timestamp` (processing time) va aumentando en conjunto.
 
 Podemos consultar una posición cualquiera del log agregando las opciones `-oN` de offset(`-o`), donde `N` es el número secuencial que queremos consultar y `-c1`, para consumir (`-c`) un único (`1`) mensaje.
 
@@ -113,7 +113,7 @@ Podemos consultar una posición cualquiera del log agregando las opciones `-oN` 
 ### Procesamiento usando Spark Structured Streaming
 [Structured Streaming + Kafka Integration Guide](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#deploying)
 
-#### Estructura de una conuslta Spark Structured Streaming
+#### Estructura de una consulta Spark Structured Streaming
 
 Paso 1: Definir el input
 
@@ -154,7 +154,7 @@ writer = counts.writeStream.format("console").outputMode("complete")
 Paso 4: Especificar la configuración de procesamiento (checkpoint y trigger)
 
 ```python
-checkpoint_dir = "/tmp/streaming-exmaple"
+checkpoint_dir = "/tmp/streaming-example"
 writer = (
     writer
     .trigger(processingTime="1 second")
@@ -189,7 +189,7 @@ query.stop()
 Ya comprobado que tenemos datos en Kafka, pasaremos a procesar los mismos haciendo uso de Spark Structured Streaming.
 
 Vamos a trabajar con los siguientes escenarios:
-1. Procesar y persistir los resultados en archivos parquet particionados 
+1. Procesar y persistir los resultados en archivos parquet particionados
     - `query1` -> `Parquet Output`
 2. Procesar y visualizar los resultados en consola
     - `query2` -> `Console Output`
@@ -216,7 +216,7 @@ La primer consulta (`query1 | Parquet Output`) finalizará luego de 120 segundos
 
 #### Escribiendo a parquet
 ##### `query1 | Parquet Output`
-Procedemos a ejectura esta primer consulta, la cual persistirá datos en archivos parquet.
+Procedemos a ejecutar esta primer consulta, la cual persistirá datos en archivos parquet.
 
 ```bash
 docker exec -it worker1 /opt/spark/bin/spark-submit \
@@ -277,7 +277,7 @@ Paremos la aplicación, modifica el código para responder la pregunta debajo li
 
 #### Escribiendo a Postgres
 ##### `query3 | Postgres Output | Simple insert`
-Ya que vamos a estar escribiendo datos a postgres, lo primero que haremos previa ejecución de la aplicación es crear la tabla de destino.  
+Ya que vamos a estar escribiendo datos a postgres, lo primero que haremos previa ejecución de la aplicación es crear la tabla de destino.
 
 Para esto nos logeamos a postgres con:
 ```bash
@@ -314,7 +314,7 @@ Una vez que la aplicación empiece a correr, puedes ir al tab de postgres, donde
 SELECT COUNT(*) n_events FROM streaming_inserts;
 
 -- Number of events for the latest avaible timestamps
-SELECT "timestamp", COUNT(*) as n_events 
+SELECT "timestamp", COUNT(*) as n_events
 FROM streaming_inserts
 GROUP BY "timestamp"
 ORDER BY "timestamp" desc
@@ -323,7 +323,7 @@ LIMIT 10;
 
 
 ##### `query4 | Postgres Output | Average Price Aggregation`
-Al igual que la query anterior, procedemos a crear la tabla de destino previa ejecución de la aplicación streaming.  
+Al igual que la query anterior, procedemos a crear la tabla de destino previa ejecución de la aplicación streaming.
 
 Si cerraste el tab donde estaba abierto postgres, nos logeamos a postgres con:
 ```bash
@@ -359,7 +359,7 @@ Revise el código de la nueva función y observe las diferencias con el anterior
 
 Al igual que el punto anterior, una vez lanzada la aplicación puedes ir al tab de postgres y realizar una serie de consultas sobre los nuevos datos.
 
-¿Qué ve de particular en la fecha de comienzo?  
+¿Qué ve de particular en la fecha de comienzo?
 Revisar el código para reemplazar la `udf` con funciones propias de `pyspark`
 
 ##### `query5 | Postgres Output | Average Price Aggregation with Timestamp columns`
@@ -395,7 +395,7 @@ docker exec -it worker1 /opt/spark/bin/spark-submit \
 ```
 Recordar que para correr esta consulta debes descomentar la sección correspondiente a `query5 | Postgres Output | Average Price Aggregation with Timestamp columns` y comentar las restantes.
 
-Lancemos la aplicación, tal como hemos hecho en las secciones anteriores, y dejemos corriendo la misma, ya que vamos a ir visualizando los datos.  
+Lancemos la aplicación, tal como hemos hecho en las secciones anteriores, y dejemos corriendo la misma, ya que vamos a ir visualizando los datos.
 
 Agregue una visualización en Superset para poder visualizar las filas insertándose en esta nueva tabla.
 

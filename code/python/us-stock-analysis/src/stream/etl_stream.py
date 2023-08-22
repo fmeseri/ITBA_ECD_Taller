@@ -3,10 +3,10 @@ import argparse
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import (
-    StringType,
     DoubleType,
-    StructType,
+    StringType,
     StructField,
+    StructType,
     TimestampType,
 )
 
@@ -16,9 +16,7 @@ def get_args(valid_queries):
     parser.add_argument(
         "--brokers", nargs="+", help="Kafka brokers (host:port)", required=True
     )
-    parser.add_argument(
-        "--topics", nargs="+", help="Kafka topics", required=True
-    )
+    parser.add_argument("--topics", nargs="+", help="Kafka topics", required=True)
     parser.add_argument(
         "--query", choices=valid_queries, type=int, help="Query to run", required=True
     )
@@ -30,8 +28,7 @@ def get_args(valid_queries):
 
 def create_spark_session(app_name):
     return (
-        SparkSession.builder
-        .appName(app_name)
+        SparkSession.builder.appName(app_name)
         .config("spark.driver.memory", "512m")
         .config("spark.executor.memory", "512m")
         .config("spark.sql.shuffle.partitions", "2")
@@ -40,12 +37,10 @@ def create_spark_session(app_name):
 
 
 def start_stream(brokers, topics, query_function, query_timeout):
-
     spark = create_spark_session(f"Stocks:Stream:ETL | Query:{query_fn}")
 
     json = (
-        spark.readStream
-        .format("kafka")
+        spark.readStream.format("kafka")
         .option("kafka.bootstrap.servers", ",".join(brokers))
         .option("subscribe", ",".join(topics))
         .load()
@@ -54,15 +49,19 @@ def start_stream(brokers, topics, query_function, query_timeout):
     json.printSchema()
 
     # Explicitly set schema
-    schema = StructType([
-        StructField("symbol", StringType(), False),
-        StructField("timestamp", TimestampType(), False),
-        StructField("price", DoubleType(), False),
-    ])
+    schema = StructType(
+        [
+            StructField("symbol", StringType(), False),
+            StructField("timestamp", TimestampType(), False),
+            StructField("price", DoubleType(), False),
+        ]
+    )
 
     json_options = {"timestampFormat": "yyyy-MM-dd'T'HH:mm'Z'"}
     stocks_json = json.select(
-        F.from_json(F.col("value").cast("string"), schema, json_options).alias("content")
+        F.from_json(F.col("value").cast("string"), schema, json_options).alias(
+            "content"
+        )
     )
 
     stocks_json.printSchema()
@@ -76,12 +75,10 @@ def start_stream(brokers, topics, query_function, query_timeout):
 
 
 def define_write_to_postgres(table_name):
-
     def write_to_postgres(df, epochId):
         print(f"Bacth (epochId): {epochId}")
         return (
-            df.write
-            .format("jdbc")
+            df.write.format("jdbc")
             .option("url", "jdbc:postgresql://postgres/workshop")
             .option("dbtable", f"workshop.{table_name}")
             .option("user", "workshop")
@@ -90,13 +87,13 @@ def define_write_to_postgres(table_name):
             .mode("append")
             .save()
         )
+
     return write_to_postgres
 
 
 def summarize_stocks(stocks):
     avg_pricing = (
-        stocks
-        .withWatermark("timestamp", "60 seconds")
+        stocks.withWatermark("timestamp", "60 seconds")
         .groupBy(
             F.window("timestamp", "30 seconds"),
             stocks.symbol,
@@ -113,8 +110,7 @@ def get_query_parquet_output(df):
     checkpoint_path = "/dataset/checkpoint"
 
     transformed_df = (
-        df
-        .withColumn("year", F.year(F.col("timestamp")))
+        df.withColumn("year", F.year(F.col("timestamp")))
         .withColumn("month", F.month(F.col("timestamp")))
         .withColumn("day", F.dayofmonth(F.col("timestamp")))
         .withColumn("hour", F.hour(F.col("timestamp")))
@@ -122,8 +118,7 @@ def get_query_parquet_output(df):
     )
 
     query = (
-        transformed_df.writeStream
-        .format("parquet")
+        transformed_df.writeStream.format("parquet")
         .partitionBy("year", "month", "day", "hour", "minute")
         .option("startingOffsets", "earliest")
         .option("checkpointLocation", checkpoint_path)
@@ -141,15 +136,12 @@ def get_query_parquet_output(df):
 
 # Query 2
 def get_query_console_output_avg_price(df):
-    transformed_df = (
-        df
-        .groupBy(F.col("symbol"))
-        .agg(F.avg(F.col("price")).alias("avg_price"))
+    transformed_df = df.groupBy(F.col("symbol")).agg(
+        F.avg(F.col("price")).alias("avg_price")
     )
 
     query = (
-        transformed_df.writeStream
-        .outputMode("complete")
+        transformed_df.writeStream.outputMode("complete")
         .format("console")
         .trigger(processingTime="10 seconds")
         .start()
@@ -164,18 +156,14 @@ def get_query_console_output_avg_price(df):
 def get_query_postgre_output(df):
     table_name = "streaming_inserts"
 
-    transformed_df = (
-        df
-        .withWatermark("timestamp", "60 seconds")
-        .select("timestamp", "symbol", "price")
+    transformed_df = df.withWatermark("timestamp", "60 seconds").select(
+        "timestamp", "symbol", "price"
     )
 
     foreach_batch_writer = define_write_to_postgres(table_name)
 
     query = (
-        transformed_df
-        .writeStream
-        .foreachBatch(foreach_batch_writer)
+        transformed_df.writeStream.foreachBatch(foreach_batch_writer)
         .outputMode("append")
         .trigger(processingTime="10 seconds")
         .start()
@@ -201,8 +189,7 @@ def get_query_postgre_output_avg_price(df):
         transformed_df
         # .withColumn("window", F.concat_ws(" - ", "window.start", "window.end"))
         .withColumn("window", window_to_string("window"))
-        .writeStream
-        .foreachBatch(foreach_batch_writer)
+        .writeStream.foreachBatch(foreach_batch_writer)
         .outputMode("append")
         .trigger(processingTime="10 seconds")
         .start()
@@ -223,12 +210,10 @@ def get_query_postgre_output_avg_price_windows(df):
     foreach_batch_writer = define_write_to_postgres(table_name)
 
     query = (
-        transformed_df
-        .withColumn("window_start", F.col("window.start"))
+        transformed_df.withColumn("window_start", F.col("window.start"))
         .withColumn("window_end", F.col("window.end"))
         .drop("window")
-        .writeStream
-        .foreachBatch(foreach_batch_writer)
+        .writeStream.foreachBatch(foreach_batch_writer)
         .outputMode("append")
         .trigger(processingTime="10 seconds")
         .start()
@@ -252,10 +237,10 @@ if __name__ == "__main__":
     args = get_args(valid_queries=list(queries))
 
     query_fn = queries[args.query]
-    
+
     start_stream(
         brokers=args.brokers,
         topics=args.topics,
         query_function=query_fn,
-        query_timeout=args.timeout
+        query_timeout=args.timeout,
     )
