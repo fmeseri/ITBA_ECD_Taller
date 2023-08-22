@@ -3,7 +3,7 @@
 ## How to run our app
 
 ```bash
-# Levantando docker en modo iterativo, conectando al master
+# Levantando docker en modo interactivo, conectando al master
 docker exec -it master bash
 
 # voy a la carpeta base de mi codigo
@@ -12,8 +12,11 @@ cd /app/python/us-stock-analysis
 # Envía el job para ser ejecutado
 spark-submit \
   --master 'spark://master:7077' \
+  --total-executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
   --jars /app/postgresql-42.1.4.jar \
-  src/batch/etl_steps.py \
+  /app/python/us-stock-analysis/src/batch/etl_steps.py \
   /dataset/stocks-small \
   /dataset/yahoo-symbols-201709.csv \
   /dataset/output.parquet
@@ -21,19 +24,31 @@ spark-submit \
 # Console
 pyspark \
   --master 'spark://master:7077' \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  --total-executor-cores 1 \
   --jars /app/postgresql-42.1.4.jar
 ```
 
 ## More examples
 
 ```bash
-spark-submit \
+docker exec -it worker1 /opt/spark/bin/spark-submit \
   --master 'spark://master:7077' \
-  src/examples/first_example.py
-
-spark-submit \
-  --master 'spark://master:7077' \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.5 \
   --jars /app/postgresql-42.1.4.jar \
+  --total-executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
+  /app/python/us-stock-analysis/src/examples/first_example.py
+
+docker exec -it worker1 /opt/spark/bin/spark-submit \
+  --master 'spark://master:7077' \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.5 \
+  --jars /app/postgresql-42.1.4.jar \
+  --total-executor-cores 1 \
+  --executor-memory 512m \
+  --driver-memory 512m \
   src/examples/postgres_example.py
 ```
 # Create a Project using `venv`
@@ -117,12 +132,14 @@ Podemos consultar una posición cualquiera del log agregando las opciones `-oN` 
 
 Paso 1: Definir el input
 
-En una consola, ejecutamos el siguiente comando que va a ser el input de nuestro job
+En una consola levantada con `docker exec -it worker1`, ejecutamos el siguiente comando que va a ser el input de nuestro job:
 ```bash
-nc -lk 9999
+sudo apt update
+sudo apt install -y ncat
+ncat -lk 9999
 ```
 
-En otra consola, iniciamos una sesión de Spark interactiva.
+En otra consola (tambien levantada como la anterior), iniciamos una sesión de Spark interactiva.
 ```bash
 pyspark --total-executor-cores 1 --executor-memory 512m --driver-memory 512m
 ```
@@ -183,6 +200,8 @@ query.awaitTermination()
 # escribir en la otra consola
 query.stop()
 ```
+
+En este punto deberian escribir oraciones en la 1ra consola y el conteo de las mismas deberia aparecer en la 2da.
 
 #### US stocks
 
