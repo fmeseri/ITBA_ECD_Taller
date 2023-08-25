@@ -31,11 +31,11 @@ def _print_high():
     return 'HIGH'
 
 
-default_args = {'owner': 'pedro', 'retries': 0, 'start_date': datetime(2022, 12, 11)}
+default_args = {'owner': 'pedro', 'retries': 0, 'start_date': datetime(2023, 8, 22)}
 with DAG(
     'random_number_extended', default_args=default_args, schedule_interval='0 4 * * *'
 ) as dag:
-    dummy_start_task = DummyOperator(task_id=f'dummy_start')
+    dummy_start_task = DummyOperator(task_id='dummy_start')
     generate_random_number = BashOperator(
         task_id='generate_random_number', bash_command=bash_cmd
     )

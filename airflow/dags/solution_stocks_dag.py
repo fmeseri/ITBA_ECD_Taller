@@ -36,7 +36,7 @@ ORDER BY avg_num_trades DESC
 LIMIT 1
 """
 
-STOCKS = {'apple': 'aapl', 'tesla': 'tsla', 'facebook': 'fb'}
+STOCKS = {'apple': 'aapl', 'tesla': 'tsla', 'meta': 'meta'}
 
 
 def _get_stock_data(stock_symbol, **context):
@@ -102,7 +102,7 @@ def _perform_daily_report(**context):
 default_args = {
     'owner': 'pedro',
     'retries': 0,
-    'start_date': datetime(2022, 12, 10),
+    'start_date': datetime(2023, 8, 18),
     'email_on_failure': True,
     'email_on_retry': False,
     'email': ['pedro@muttdata.ai'],
@@ -110,7 +110,6 @@ default_args = {
 with DAG(
     'stocks_extended', default_args=default_args, schedule_interval='0 4 * * *'
 ) as dag:
-
     create_table_if_not_exists = SqliteOperator(
         task_id='create_table_if_not_exists',
         sql=SQL_CREATE,

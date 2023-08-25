@@ -12,7 +12,7 @@ from sqlite_cli import SqLiteClient
 
 BASE_URL = 'https://www.alphavantage.co/query'
 API_KEY = 'TFHNYCWBD71JBSON'
-STOCK_FN = 'TIME_SERIES_DAILY_ADJUSTED'
+STOCK_FN = 'TIME_SERIES_DAILY'
 
 SQL_DB = '/tmp/sqlite_default.db'  # This is defined in Admin/Connections
 SQL_TABLE = 'stocks_daily'
@@ -36,6 +36,7 @@ def _get_stock_data(stock_symbol, **context):
     print(f"Getting data from {end_point}...")
     r = requests.get(end_point)
     data = json.loads(r.content)
+    print(data)
     df = (
         pd.DataFrame(data['Time Series (Daily)'])
         .T.reset_index()
@@ -47,10 +48,11 @@ def _get_stock_data(stock_symbol, **context):
             if c != 'date':
                 df[c] = df[c].astype(float)
         df['avg_price'] = (df['2. high'] + df['3. low']) / 2
-        df['avg_num_trades'] = df['6. volume'] / 1440
+        df['avg_num_trades'] = df['5. volume'] / 1440
     else:
         df = pd.DataFrame(
-            [[date, np.nan, np.nan]], columns=['date', 'avg_num_trades', 'avg_price'],
+            [[date, np.nan, np.nan]],
+            columns=['date', 'avg_num_trades', 'avg_price'],
         )
     df['symbol'] = stock_symbol
     df = df[['date', 'symbol', 'avg_num_trades', 'avg_price']]
@@ -65,7 +67,7 @@ def _insert_daily_data(**context):
     return
 
 
-default_args = {'owner': 'pedro', 'retries': 0, 'start_date': datetime(2022, 12, 10)}
+default_args = {'owner': 'pedro', 'retries': 0, 'start_date': datetime(2023, 8, 18)}
 with DAG('stocks', default_args=default_args, schedule_interval='0 4 * * *') as dag:
     create_table_if_not_exists = SqliteOperator(
         task_id='create_table_if_not_exists',

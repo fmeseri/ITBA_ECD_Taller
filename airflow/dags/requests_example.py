@@ -34,7 +34,8 @@ def _get_stock_data(stock_symbol, date):
         df['avg_num_trades'] = df['5. volume'] / 1440
     else:
         df = pd.DataFrame(
-            [[date, np.nan, np.nan]], columns=['date', 'avg_num_trades', 'avg_price'],
+            [[date, np.nan, np.nan]],
+            columns=['date', 'avg_num_trades', 'avg_price'],
         )
     df['symbol'] = stock_symbol
     df = df[['date', 'symbol', 'avg_num_trades', 'avg_price']]
@@ -42,5 +43,6 @@ def _get_stock_data(stock_symbol, date):
 
 
 if __name__ == '__main__':
-    yesterday = datetime(2020, 4, 13)
+    yesterday = datetime(2023, 8, 21)
     df1 = _get_stock_data('aapl', yesterday)
+    print(df1)
