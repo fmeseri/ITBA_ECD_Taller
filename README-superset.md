@@ -9,3 +9,5 @@
 * Agregar tabla (Sources > Tables) :
   - Database: `workshop`
   - Table Name: `DolarHistorico`
+
+En caso de No contar con el dashboard puede importar el mismo desde el zip -->  ./superset/conf/dashboard_for_Import.zip

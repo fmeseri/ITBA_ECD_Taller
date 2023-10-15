@@ -6,11 +6,15 @@ Se obtiene la informacion de la API de BLueANalytics
 Es importante comentar que es posible utilizar el código para tomar la cotización desde una fecha anterior o posterior.
 Esta fecha puede editarse en el DAG -->./airflow/dags/Dolar_Historico_dag.py  modificando el  
 'start_date': datetime(2023, 8, 13)
+
 Se deja disponible la data, así como su análisis y gráficos asociados en Superset.
+
+![Superset Dashboard](image.png)
+
+Una vez levantado el ambiente se debe ingresar a airflow desde http://localhost:9090, luego encender el DAG correspondiente.
 
 ## Contenidos
 * [Levantar el ambiente](#levantar-ambiente)
-* [Airflow- Encender el job](#levantar-ambiente)
 * [Ingresar a Superset](#levantar-ambiente)
 
 ## Infrastructura
