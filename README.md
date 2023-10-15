@@ -2,7 +2,7 @@
 ## Fernando MESERI
 Este repositorio permite  disponibilizar las cotizaciones del dólar  Oficial  y paralelo-- Blue -- para ARGENTINA desde las elecciones primarias - PASO -  del 13 de Agosto de 2023.
 Se obtiene la informacion de la API de BLueANalytics
-#### https://api.bluelytics.com.ar/v2/historical?day=yyyy-mm-dd
+#### https://api.bluelytics.com.ar/v2/historical?day=2023-08-13
 Es importante comentar que es posible utilizar el código para tomar la cotización desde una fecha anterior o posterior.
 Esta fecha puede editarse en el DAG -->./airflow/dags/Dolar_Historico_dag.py  modificando el  
 'start_date': datetime(2023, 8, 13)
